@@ -268,3 +268,43 @@ describe("Pending transactions", () => {
     expect(blockchain.pendingTransactions[0]).toEqual(transaction);
   });
 });
+
+describe("Pending transaction mining", () => {
+  it("should mine pending transactions into a new block", () => {
+    // Arrange: create a blockchain with low mining difficulty
+    // so the test completes quickly.
+    const blockchain = new Blockchain();
+    blockchain.difficulty = 1;
+
+    const transaction = {
+      sender: "Coffee Farm A",
+      recipient: "Roastery B",
+      batchId: "BATCH-006",
+      weightKg: 90,
+    };
+
+    blockchain.addTransaction(transaction);
+
+    const previousBlock = blockchain.chain[0];
+
+    // Act: mine all currently pending transactions.
+    const minedBlock = blockchain.minePendingTransactions();
+
+    // Assert: a new block should have been added to the chain.
+    expect(blockchain.chain).toHaveLength(2);
+
+    // Assert: the mined block should contain the pending transaction.
+    expect(minedBlock.transactions).toEqual([transaction]);
+
+    // Assert: the new block must point to the previous block hash.
+    expect(minedBlock.previousHash).toBe(previousBlock.hash);
+
+    // Assert: the mined block hash must satisfy the configured difficulty.
+    expect(minedBlock.hash.startsWith("0".repeat(blockchain.difficulty))).toBe(
+      true,
+    );
+
+    // Assert: the pending transaction pool must be cleared after mining.
+    expect(blockchain.pendingTransactions).toEqual([]);
+  });
+});
