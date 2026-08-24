@@ -5,7 +5,7 @@ import { Blockchain } from "./blockchain/Blockchain.js";
 // Create the Express application.
 const app = express();
 
-// Enable JSON request parsing for upcoming POST endpoints.
+// Enable JSON request parsing for POST endpoints.
 app.use(express.json());
 
 // Create one blockchain instance that represents
@@ -21,13 +21,26 @@ app.get("/blockchain", (req, res) => {
   });
 });
 
+// Validate and add a new coffee logistics transaction.
 app.post("/transactions", validateTransaction, (req, res) => {
-  // Add the validated coffee movement to the pending transaction pool.
+  // Add the validated transaction to the pending transaction pool.
   const transaction = blockchain.addTransaction(req.body);
 
   // Return the accepted transaction to the client.
   res.status(201).json({
     transaction,
+  });
+});
+
+// Mine all currently pending transactions into a new blockchain block.
+app.post("/mine", (req, res) => {
+  // Run the blockchain mining process. This performs Proof-of-Work,
+  // creates a new block, adds it to the chain and clears the pending pool.
+  const block = blockchain.minePendingTransactions();
+
+  // Return the newly mined block to the client.
+  res.status(201).json({
+    block,
   });
 });
 
