@@ -87,6 +87,15 @@ export class Blockchain {
     };
   }
 
+  addTransaction(transaction) {
+    // Store the validated transaction in the pending transaction pool.
+    // Transactions remain pending until they are included in a mined block.
+    this.pendingTransactions.push(transaction);
+
+    // Return the transaction so callers can confirm what was added.
+    return transaction;
+  }
+
   isChainValid() {
     // Start at block index 1 because the genesis block has no previous block
     // to compare against.
