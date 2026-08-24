@@ -246,3 +246,25 @@ describe("Blockchain initialization", () => {
     expect(blockchain.chain[0]).toHaveProperty("hash");
   });
 });
+
+//
+describe("Pending transactions", () => {
+  it("should add a transaction to the pending transaction pool", () => {
+    // Arrange: create a new blockchain and a valid coffee transaction.
+    const blockchain = new Blockchain();
+
+    const transaction = {
+      sender: "Coffee Farm A",
+      recipient: "Roastery B",
+      batchId: "BATCH-005",
+      weightKg: 120,
+    };
+
+    // Act: add the transaction to the pending transaction pool.
+    blockchain.addTransaction(transaction);
+
+    // Assert: the transaction should now be stored as pending.
+    expect(blockchain.pendingTransactions).toHaveLength(1);
+    expect(blockchain.pendingTransactions[0]).toEqual(transaction);
+  });
+});
