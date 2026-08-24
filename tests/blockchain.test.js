@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Blockchain } from "../src/blockchain/Blockchain.js";
 
+// Test suite for the Blockchain class hash calculation and proof-of-work functionality.
 describe("Blockchain hash calculation", () => {
   it("should calculate a SHA-256 hash for block data", () => {
     // Arrange :-) create a blockchain instance and deterministic block data.
@@ -222,5 +223,26 @@ describe("Blockchain validation", () => {
 
     // Act and Assert: an invalid block link must invalidate the chain.
     expect(blockchain.isChainValid()).toBe(false);
+  });
+});
+
+// Test suite for the Blockchain class initialization and genesis block creation.
+describe("Blockchain initialization", () => {
+  it("should initialize with a genesis block and an empty pending transaction pool", () => {
+    // Arrange and Act: create a new blockchain instance.
+    const blockchain = new Blockchain();
+
+    // Assert: the chain should start with exactly one genesis block.
+    expect(blockchain.chain).toHaveLength(1);
+
+    // Assert: pending transactions should start as an empty array.
+    expect(blockchain.pendingTransactions).toEqual([]);
+
+    // Assert: verify the expected core properties of the genesis block.
+    expect(blockchain.chain[0]).toHaveProperty("index", 0);
+    expect(blockchain.chain[0]).toHaveProperty("transactions");
+    expect(blockchain.chain[0]).toHaveProperty("previousHash", "0");
+    expect(blockchain.chain[0]).toHaveProperty("nonce");
+    expect(blockchain.chain[0]).toHaveProperty("hash");
   });
 });
