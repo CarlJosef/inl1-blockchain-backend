@@ -20,7 +20,6 @@ export class Blockchain {
     return crypto.createHash("sha256").update(data).digest("hex");
   }
 
-  // ADD proofOfWork() HERE
   proofOfWork(index, timestamp, transactions, previousHash) {
     // Start the nonce at zero and calculate the first candidate hash.
     let nonce = 0;
@@ -57,5 +56,38 @@ export class Blockchain {
       nonce,
       hash,
     };
+  }
+
+  isChainValid() {
+    // Start at block index 1 because the genesis block has no previous block
+    // to compare against.
+    for (let i = 1; i < this.chain.length; i += 1) {
+      const currentBlock = this.chain[i];
+      const previousBlock = this.chain[i - 1];
+
+      // Recalculate the current block hash from its stored data.
+      const recalculatedHash = this.calculateHash(
+        currentBlock.index,
+        currentBlock.timestamp,
+        currentBlock.transactions,
+        currentBlock.previousHash,
+        currentBlock.nonce,
+      );
+
+      // If the stored hash no longer matches the recalculated hash,
+      // the block data has been modified.
+      if (currentBlock.hash !== recalculatedHash) {
+        return false;
+      }
+
+      // Verify that the current block still points to the actual hash
+      // of the previous block in the chain.
+      if (currentBlock.previousHash !== previousBlock.hash) {
+        return false;
+      }
+    }
+
+    // If every block passes both integrity checks, the chain is valid.
+    return true;
   }
 }
