@@ -2,6 +2,24 @@ import crypto from "node:crypto";
 
 export class Blockchain {
   constructor() {
+    // Use a very low Proof-of-Work difficulty in the test environment
+    // so automated tests complete quickly and do not time out.
+    if (process.env.NODE_ENV === "test") {
+      this.difficulty = 1;
+    } else {
+      // Read the configured production difficulty from the environment.
+      // Fall back to 3 if the environment variable is missing or invalid.
+      const configuredDifficulty = Number.parseInt(
+        process.env.POW_DIFFICULTY,
+        10,
+      );
+
+      this.difficulty =
+        Number.isInteger(configuredDifficulty) && configuredDifficulty > 0
+          ? configuredDifficulty
+          : 3;
+    }
+
     // Initialize the blockchain with a dynamically created genesis block.
     this.chain = [this.createGenesisBlock()];
 
