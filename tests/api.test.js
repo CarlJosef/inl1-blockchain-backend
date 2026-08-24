@@ -56,3 +56,34 @@ describe("POST /transactions", () => {
     expect(response.status).toBe(400);
   });
 });
+
+describe("POST /mine", () => {
+  it("should mine pending transactions into a new block", async () => {
+    // Arrange: create a valid transaction through the public API.
+    const transaction = {
+      sender: "Coffee Farm C",
+      recipient: "Cafe D",
+      batchId: "BATCH-008",
+      weightKg: 80,
+    };
+
+    await request(app).post("/transactions").send(transaction);
+
+    // Act: request mining of the pending transaction pool.
+    const response = await request(app).post("/mine");
+
+    // Assert: the endpoint should return the newly mined block.
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty("block");
+
+    // Assert: the mined block should contain the submitted transaction.
+    expect(response.body.block.transactions).toContainEqual(transaction);
+
+    // Assert: the block must expose the required blockchain properties.
+    expect(response.body.block).toHaveProperty("index");
+    expect(response.body.block).toHaveProperty("timestamp");
+    expect(response.body.block).toHaveProperty("previousHash");
+    expect(response.body.block).toHaveProperty("nonce");
+    expect(response.body.block).toHaveProperty("hash");
+  });
+});
