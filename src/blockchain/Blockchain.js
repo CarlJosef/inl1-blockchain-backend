@@ -2,8 +2,37 @@ import crypto from "node:crypto";
 
 export class Blockchain {
   constructor() {
-    // The constructor is intentionally minimal at this stage.
-    // Additional blockchain state will be added in later TDD cycles.
+    // Initialize the blockchain with a dynamically created genesis block.
+    this.chain = [this.createGenesisBlock()];
+
+    // New transactions are stored here until they are included
+    // in a mined block.
+    this.pendingTransactions = [];
+  }
+
+  createGenesisBlock() {
+    // The genesis block is the first block in the chain and therefore
+    // does not reference any previous block.
+    const block = {
+      index: 0,
+      timestamp: Date.now(),
+      transactions: [],
+      previousHash: "0",
+      nonce: 0,
+      hash: "",
+    };
+
+    // Calculate the genesis block hash dynamically instead of
+    // hardcoding a pre-generated block or hash.
+    block.hash = this.calculateHash(
+      block.index,
+      block.timestamp,
+      block.transactions,
+      block.previousHash,
+      block.nonce,
+    );
+
+    return block;
   }
 
   calculateHash(index, timestamp, transactions, previousHash, nonce) {
