@@ -96,6 +96,51 @@ export class Blockchain {
     return transaction;
   }
 
+  minePendingTransactions() {
+    // Determine the index for the new block based on the current chain length.
+    const index = this.chain.length;
+
+    // Capture the timestamp once so the exact same value is used
+    // during mining and when the final block is created.
+    const timestamp = Date.now();
+
+    // Link the new block to the latest block already stored in the chain.
+    const previousBlock = this.chain[this.chain.length - 1];
+    const previousHash = previousBlock.hash;
+
+    // Copy the pending transactions so the mined block keeps
+    // its own transaction data after the pending pool is cleared.
+    const transactions = [...this.pendingTransactions];
+
+    // Run Proof-of-Work and retrieve the nonce and valid hash.
+    const { nonce, hash } = this.proofOfWork(
+      index,
+      timestamp,
+      transactions,
+      previousHash,
+    );
+
+    // Create the new block dynamically from the mined values.
+    const newBlock = {
+      index,
+      timestamp,
+      transactions,
+      previousHash,
+      nonce,
+      hash,
+    };
+
+    // Add the completed block to the blockchain.
+    this.chain.push(newBlock);
+
+    // Clear the pending transaction pool because the transactions
+    // have now been included in a completed block.
+    this.pendingTransactions = [];
+
+    // Return the newly mined block to the caller.
+    return newBlock;
+  }
+
   isChainValid() {
     // Start at block index 1 because the genesis block has no previous block
     // to compare against.
