@@ -1,10 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { Blockchain } from "../src/blockchain/Blockchain.js";
 
-// Test suite for the Blockchain class hash calculation and proof-of-work functionality.
 describe("Blockchain hash calculation", () => {
   it("should calculate a SHA-256 hash for block data", () => {
-    // Arrange :-) create a blockchain instance and deterministic block data.
+    // Arrange: create a blockchain instance and deterministic block data.
     const blockchain = new Blockchain();
 
     const transactions = [
@@ -16,7 +15,7 @@ describe("Blockchain hash calculation", () => {
       },
     ];
 
-    // The act: calculate the hash for the supplied block data.
+    // Act: calculate the hash for the supplied block data.
     const hash = blockchain.calculateHash(
       1,
       1234567890,
@@ -34,7 +33,7 @@ describe("Blockchain hash calculation", () => {
 describe("Blockchain proof-of-work", () => {
   it("should mine a hash that matches the configured difficulty", () => {
     // Arrange: create a blockchain instance and use a low difficulty
-    // so my test can complete quickly during development.
+    // so the test can complete quickly during development.
     const blockchain = new Blockchain();
     blockchain.difficulty = 1;
 
@@ -47,7 +46,7 @@ describe("Blockchain proof-of-work", () => {
       },
     ];
 
-    // Act: Attempt to mine a valid block hash.
+    // Act: attempt to mine a valid block hash.
     const result = blockchain.proofOfWork(
       1,
       1234567890,
@@ -211,8 +210,8 @@ describe("Blockchain validation", () => {
     // Break the link between the current block and the previous block.
     blockchain.chain[1].previousHash = "invalid-previous-hash";
 
-    // Recalculate the current block hash so this test specifically
-    // exercises the previousHash-link validation branch.
+    // Recalculate the block hash so this test specifically verifies
+    // the previousHash relationship rather than the block data hash.
     blockchain.chain[1].hash = blockchain.calculateHash(
       blockchain.chain[1].index,
       blockchain.chain[1].timestamp,
@@ -226,7 +225,6 @@ describe("Blockchain validation", () => {
   });
 });
 
-// Test suite for the Blockchain class initialization and genesis block creation.
 describe("Blockchain initialization", () => {
   it("should initialize with a genesis block and an empty pending transaction pool", () => {
     // Arrange and Act: create a new blockchain instance.
@@ -247,7 +245,6 @@ describe("Blockchain initialization", () => {
   });
 });
 
-//
 describe("Pending transactions", () => {
   it("should add a transaction to the pending transaction pool", () => {
     // Arrange: create a new blockchain and a valid coffee transaction.
@@ -306,5 +303,58 @@ describe("Pending transaction mining", () => {
 
     // Assert: the pending transaction pool must be cleared after mining.
     expect(blockchain.pendingTransactions).toEqual([]);
+  });
+});
+
+describe("Mining difficulty configuration", () => {
+  it("should use difficulty 1 when NODE_ENV is test", () => {
+    // Arrange: preserve the current environment value so the test
+    // does not permanently modify the process environment.
+    const originalNodeEnv = process.env.NODE_ENV;
+
+    process.env.NODE_ENV = "test";
+
+    // Act: create a blockchain while running in the test environment.
+    const blockchain = new Blockchain();
+
+    // Assert: test environments must use difficulty 1 so mining
+    // remains fast enough for automated tests.
+    expect(blockchain.difficulty).toBe(1);
+
+    // Cleanup: restore the original NODE_ENV value.
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+  });
+
+  it("should use the configured difficulty outside the test environment", () => {
+    // Arrange: preserve the current environment configuration.
+    const originalNodeEnv = process.env.NODE_ENV;
+    const originalDifficulty = process.env.POW_DIFFICULTY;
+
+    process.env.NODE_ENV = "production";
+    process.env.POW_DIFFICULTY = "3";
+
+    // Act: create a blockchain using the production configuration.
+    const blockchain = new Blockchain();
+
+    // Assert: production should use the configured mining difficulty.
+    expect(blockchain.difficulty).toBe(3);
+
+    // Cleanup: restore NODE_ENV.
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+
+    // Cleanup: restore POW_DIFFICULTY.
+    if (originalDifficulty === undefined) {
+      delete process.env.POW_DIFFICULTY;
+    } else {
+      process.env.POW_DIFFICULTY = originalDifficulty;
+    }
   });
 });
