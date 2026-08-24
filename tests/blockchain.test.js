@@ -65,3 +65,162 @@ describe("Blockchain proof-of-work", () => {
     expect(result.nonce).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe("Blockchain validation", () => {
+  it("should return true for a valid blockchain", () => {
+    // Arrange: create a blockchain instance with a manually prepared
+    // valid chain structure for the validation test.
+    const blockchain = new Blockchain();
+
+    const genesisBlock = {
+      index: 0,
+      timestamp: 1234567890,
+      transactions: [],
+      previousHash: "0",
+      nonce: 0,
+    };
+
+    genesisBlock.hash = blockchain.calculateHash(
+      genesisBlock.index,
+      genesisBlock.timestamp,
+      genesisBlock.transactions,
+      genesisBlock.previousHash,
+      genesisBlock.nonce,
+    );
+
+    const secondBlock = {
+      index: 1,
+      timestamp: 1234567891,
+      transactions: [
+        {
+          sender: "Farm A",
+          recipient: "Roastery B",
+          batchId: "BATCH-003",
+          weightKg: 50,
+        },
+      ],
+      previousHash: genesisBlock.hash,
+      nonce: 0,
+    };
+
+    secondBlock.hash = blockchain.calculateHash(
+      secondBlock.index,
+      secondBlock.timestamp,
+      secondBlock.transactions,
+      secondBlock.previousHash,
+      secondBlock.nonce,
+    );
+
+    blockchain.chain = [genesisBlock, secondBlock];
+
+    // Act and Assert: an unchanged blockchain must be considered valid.
+    expect(blockchain.isChainValid()).toBe(true);
+  });
+
+  it("should return false when block data has been tampered with", () => {
+    // Arrange: create a valid two-block chain.
+    const blockchain = new Blockchain();
+
+    const genesisBlock = {
+      index: 0,
+      timestamp: 1234567890,
+      transactions: [],
+      previousHash: "0",
+      nonce: 0,
+    };
+
+    genesisBlock.hash = blockchain.calculateHash(
+      genesisBlock.index,
+      genesisBlock.timestamp,
+      genesisBlock.transactions,
+      genesisBlock.previousHash,
+      genesisBlock.nonce,
+    );
+
+    const secondBlock = {
+      index: 1,
+      timestamp: 1234567891,
+      transactions: [
+        {
+          sender: "Farm A",
+          recipient: "Roastery B",
+          batchId: "BATCH-004",
+          weightKg: 50,
+        },
+      ],
+      previousHash: genesisBlock.hash,
+      nonce: 0,
+    };
+
+    secondBlock.hash = blockchain.calculateHash(
+      secondBlock.index,
+      secondBlock.timestamp,
+      secondBlock.transactions,
+      secondBlock.previousHash,
+      secondBlock.nonce,
+    );
+
+    blockchain.chain = [genesisBlock, secondBlock];
+
+    // Tamper with the transaction after the block hash has been calculated.
+    blockchain.chain[1].transactions[0].weightKg = 999;
+
+    // Act and Assert: changed block data must invalidate the chain.
+    expect(blockchain.isChainValid()).toBe(false);
+  });
+
+  it("should return false when previousHash does not match the previous block", () => {
+    // Arrange: create a valid two-block chain.
+    const blockchain = new Blockchain();
+
+    const genesisBlock = {
+      index: 0,
+      timestamp: 1234567890,
+      transactions: [],
+      previousHash: "0",
+      nonce: 0,
+    };
+
+    genesisBlock.hash = blockchain.calculateHash(
+      genesisBlock.index,
+      genesisBlock.timestamp,
+      genesisBlock.transactions,
+      genesisBlock.previousHash,
+      genesisBlock.nonce,
+    );
+
+    const secondBlock = {
+      index: 1,
+      timestamp: 1234567891,
+      transactions: [],
+      previousHash: genesisBlock.hash,
+      nonce: 0,
+    };
+
+    secondBlock.hash = blockchain.calculateHash(
+      secondBlock.index,
+      secondBlock.timestamp,
+      secondBlock.transactions,
+      secondBlock.previousHash,
+      secondBlock.nonce,
+    );
+
+    blockchain.chain = [genesisBlock, secondBlock];
+
+    // Break the link between the current block and the previous block.
+    blockchain.chain[1].previousHash = "invalid-previous-hash";
+
+    // Recalculate the current block hash so this test specifically
+    // exercises the previousHash-link validation branch.
+    blockchain.chain[1].hash = blockchain.calculateHash(
+      blockchain.chain[1].index,
+      blockchain.chain[1].timestamp,
+      blockchain.chain[1].transactions,
+      blockchain.chain[1].previousHash,
+      blockchain.chain[1].nonce,
+    );
+
+    // Act and Assert: an invalid block link must invalidate the chain.
+    expect(blockchain.isChainValid()).toBe(false);
+  });
+});
