@@ -14,6 +14,61 @@ describe("GET /blockchain", () => {
     expect(response.body).toHaveProperty("chain");
     expect(response.body).toHaveProperty("pendingTransactions");
   });
+
+  it("should reject a transaction without sender", async () => {
+    // Arrange: create an invalid transaction without the required sender.
+    const invalidTransaction = {
+      recipient: "Roastery B",
+      batchId: "BATCH-009",
+      weightKg: 100,
+    };
+
+    // Act: submit the invalid transaction.
+    const response = await request(app)
+      .post("/transactions")
+      .send(invalidTransaction);
+
+    // Assert: the validation middleware must reject the request.
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("should reject a transaction without recipient", async () => {
+    // Arrange: create an invalid transaction without the required recipient.
+    const invalidTransaction = {
+      sender: "Coffee Farm A",
+      batchId: "BATCH-010",
+      weightKg: 100,
+    };
+
+    // Act: submit the invalid transaction.
+    const response = await request(app)
+      .post("/transactions")
+      .send(invalidTransaction);
+
+    // Assert: the validation middleware must reject the request.
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
+
+  it("should reject a transaction with an invalid weightKg", async () => {
+    // Arrange: create a transaction with an invalid non-positive weight.
+    const invalidTransaction = {
+      sender: "Coffee Farm A",
+      recipient: "Roastery B",
+      batchId: "BATCH-011",
+      weightKg: 0,
+    };
+
+    // Act: submit the invalid transaction.
+    const response = await request(app)
+      .post("/transactions")
+      .send(invalidTransaction);
+
+    // Assert: weightKg must be a positive number.
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty("error");
+  });
 });
 
 // POST / transactiosn and validate middleware
